@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Understand the Bible</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    .welcome-screen {
+      background: url('https://images.unsplash.com/photo-1508780709619-79562169bc64?auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .welcome-screen h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+    }
+
+    .welcome-screen button {
+      background-color: #27ae60;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      padding: 12px 25px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .welcome-screen button:hover {
+      background-color: #219150;
+    }
+
+    #appContent {
+      display: none;
+      background: #f4f4f4;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
+
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.2);
+      z-index: 999;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    input, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button:not(.welcome-screen button) {
+      background-color: #27ae60;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover:not(.welcome-screen button) {
+      background-color: #219150;
+    }
+
+    .verse-output {
+      margin-top: 20px;
+      padding: 15px;
+      background: #ecf0f1;
+      border-left: 5px solid #3498db;
+      position: relative;
+    }
+
+    .loading {
+      font-style: italic;
+      color: #888;
+    }
+
+    .form-section {
+      margin-top: 40px;
+    }
+
+    .verse-of-day {
+      margin-top: 30px;
+      padding: 15px;
+      background: #fdf6e3;
+      border-left: 5px solid #f39c12;
+    }
+
+    .listen-button {
+      margin-top: 10px;
+      background-color: #3498db;
+    }
+
+    .listen-button:hover {
+      background-color: #2e86c1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Welcome Screen -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <h1>Welcome to Sosmith Bible Explanation</h1>
+    <p>Discover the Word of God in simple words</p>
+    <button onclick="showApp()">Continue</button>
+  </div>
+
+  <!-- Bible App -->
+  <div id="appContent">
+    <div class="watermark">Sosmith</div>
+
+    <header>
+      <h1>Understand the Bible</h1>
+      <p>Search and get any verse from Genesis to Revelation</p>
+    </header>
+
+    <main>
+      <h2>Find a Verse</h2>
+      <input type="text" id="verseInput" placeholder="e.g. John 3:16, Genesis 1:1" />
+      <button onclick="getExplanation()">Search</button>
+
+      <div id="output" class="verse-output" style="display: none;"></div>
+
+      <div class="verse-of-day" id="verseOfDay">
+        <strong>Verse of the Day:</strong><br>
+        <span id="dailyVerse">Loading...</span>
+      </div>
+
+      <div class="form-section">
+        <h3>Ask a Pastor</h3>
+        <p>If you need more understanding, type your question below:</p>
+        <textarea id="pastorQuestion" rows="4" placeholder="Type your question here..."></textarea>
+        <button onclick="submitQuestion()">Submit Question</button>
+        <p id="questionStatus" style="color: green; display: none;">Question submitted! A response will be sent soon.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function showApp() {
+      document.getElementById("welcomeScreen").style.display = "none";
+      document.getElementById("appContent").style.display = "block";
+    }
+
+    async function getExplanation() {
+      const input = document.getElementById("verseInput").value.trim();
+      const output = document.getElementById("output");
+
+      if (!input) {
+        output.textContent = "Please enter a Bible reference like 'John 3:16'.";
+        output.style.display = "block";
+        return;
+      }
+
+      output.innerHTML = "<span class='loading'>Loading verse...</span>";
+      output.style.display = "block";
+
+      try {
+        const response = await fetch(`https://bible-api.com/${encodeURIComponent(input)}`);
+        const data = await response.json();
+
+        if (data.text) {
+          output.innerHTML = `
+            <strong>${data.reference}</strong><br>
+            <div id="verseText">${data.text.replace(/\n/g, "<br>")}</div>
+            <button class="listen-button" onclick="readVerse('${data.text.replace(/'/g, "\\'").replace(/\n/g, " ")}')">🔊 Listen</button>
+            <br><br>
+            <em><strong>Explanation:</strong> Coming soon or ask a pastor to help you understand this verse.</em>
+          `;
+          output.scrollIntoView({ behavior: "smooth" });
+        } else {
+          output.innerHTML = "Verse not found. Try checking your spelling.";
+        }
+      } catch (err) {
+        output.innerHTML = "An error occurred while fetching the verse.";
+      }
+    }
+
+    function readVerse(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      speechSynthesis.speak(utterance);
+    }
+
+    // Allow Enter key to search
+    document.getElementById("verseInput").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") getExplanation();
+    });
+
+    // Ask a Pastor form
+    function submitQuestion() {
+      const questionBox = document.getElementById("pastorQuestion");
+      const status = document.getElementById("questionStatus");
+      const question = questionBox.value.trim();
+
+      if (question) {
+        questionBox.value = "";
+        status.style.display = "block";
+        setTimeout(() => status.style.display = "none", 4000);
+      }
+    }
+
+    // Verse of the Day
+    async function loadVerseOfDay() {
+      const verses = [
+        "John 3:16", "Psalm 23:1", "Genesis 1:1", "Romans 8:28",
+        "Proverbs 3:5", "Philippians 4:13", "Matthew 6:33", "Isaiah 41:10"
+      ];
+      const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+
+      try {
+        const response = await fetch(`https://bible-api.com/${encodeURIComponent(randomVerse)}`);
+        const data = await response.json();
+        document.getElementById("dailyVerse").innerHTML = `<strong>${data.reference}</strong><br>${data.text}`;
+      } catch {
+        document.getElementById("dailyVerse").textContent = "Could not load verse today.";
+      }
+    }
+
+    loadVerseOfDay();
+  </script>
+</body>
+</html>>
